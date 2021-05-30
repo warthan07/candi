@@ -1,0 +1,123 @@
+diff --git a/cmake/configure/configure_2_boost.cmake b/cmake/configure/configure_2_boost.cmake
+index bb5640bfd8..4758d6446a 100644
+--- a/cmake/configure/configure_2_boost.cmake
++++ b/cmake/configure/configure_2_boost.cmake
+@@ -113,6 +113,20 @@ MACRO(FEATURE_BOOST_CONFIGURE_BUNDLED)
+   # We need to set this path before calling the configure function
+   # to be able to use the include paths in the checks.
+   SET(BOOST_BUNDLED_INCLUDE_DIRS ${BOOST_FOLDER}/include)
++  #
++  # We still need the version information, which is set up in the FindBoost
++  # module in the non-bundled case:
++  #
++  FILE(STRINGS "${BOOST_BUNDLED_INCLUDE_DIRS}/boost/version.hpp"
++    BOOST_VERSION_STRING
++    REGEX "#define.*BOOST_VERSION")
++
++  STRING(REGEX REPLACE "^.*BOOST_VERSION.* ([0-9]+).*" "\\1"
++    BOOST_VERSION_NUMBER "${BOOST_VERSION_STRING}"
++    )
++  MATH(EXPR Boost_MAJOR_VERSION "${BOOST_VERSION_NUMBER} / 100000")
++  MATH(EXPR Boost_MINOR_VERSION "${BOOST_VERSION_NUMBER} / 100 % 1000")
++  MATH(EXPR Boost_SUBMINOR_VERSION "${BOOST_VERSION_NUMBER} % 100")
+ 
+   FEATURE_BOOST_CONFIGURE_COMMON()
+ 
+diff --git a/cmake/modules/FindMUPARSER.cmake b/cmake/modules/FindMUPARSER.cmake
+index 7f4066adb0..c7dce55c7e 100644
+--- a/cmake/modules/FindMUPARSER.cmake
++++ b/cmake/modules/FindMUPARSER.cmake
+@@ -42,7 +42,7 @@ DEAL_II_FIND_PATH(MUPARSER_INCLUDE_DIR muParserDef.h
+ 
+ IF(EXISTS ${MUPARSER_INCLUDE_DIR}/muParserDef.h)
+   FILE(STRINGS "${MUPARSER_INCLUDE_DIR}/muParserDef.h" MUPARSER_VERSION_STRING_LINE
+-    REGEX "#define MUP_VERSION _T"
++    REGEX "string_type ParserVersion = string_type"
+     )
+  
+   STRING(REGEX REPLACE ".*\"(.*)\".*" "\\1"
+diff --git a/cmake/setup_compiler_flags_gnu.cmake b/cmake/setup_compiler_flags_gnu.cmake
+index 88600e0f20..ff5106668e 100644
+--- a/cmake/setup_compiler_flags_gnu.cmake
++++ b/cmake/setup_compiler_flags_gnu.cmake
+@@ -57,7 +57,6 @@ ENABLE_IF_SUPPORTED(DEAL_II_CXX_FLAGS "-fPIC")
+ # Check whether the -as-needed flag is available. If so set it to link
+ # the deal.II library with it.
+ #
+-ENABLE_IF_LINKS(DEAL_II_LINKER_FLAGS "-Wl,--as-needed")
+ 
+ #
+ # Setup various warnings:
+diff --git a/include/deal.II/base/bounding_box.h b/include/deal.II/base/bounding_box.h
+index 040894ac72..282880a1b4 100644
+--- a/include/deal.II/base/bounding_box.h
++++ b/include/deal.II/base/bounding_box.h
+@@ -26,6 +26,9 @@
+ DEAL_II_DISABLE_EXTRA_DIAGNOSTICS
+ #include <boost/geometry/algorithms/envelope.hpp>
+ #include <boost/geometry/geometries/multi_point.hpp>
++#if DEAL_II_BOOST_VERSION_GTE(1, 75, 0)
++#  include <boost/geometry/strategies/envelope/cartesian.hpp>
++#endif
+ DEAL_II_ENABLE_EXTRA_DIAGNOSTICS
+ 
+ DEAL_II_NAMESPACE_OPEN
+diff --git a/include/deal.II/base/config.h.in b/include/deal.II/base/config.h.in
+index fde1828770..6e73aae558 100644
+--- a/include/deal.II/base/config.h.in
++++ b/include/deal.II/base/config.h.in
+@@ -226,6 +226,18 @@
+     >=  \
+     (major)*10000 + (minor)*100 + (subminor))
+ 
++/*
++ * boost:
++ */
++#define DEAL_II_BOOST_VERSION_MAJOR @Boost_MAJOR_VERSION@
++#define DEAL_II_BOOST_VERSION_MINOR @Boost_MINOR_VERSION@
++#define DEAL_II_BOOST_VERSION_SUBMINOR @Boost_SUBMINOR_VERSION@
++#define DEAL_II_BOOST_VERSION_GTE(major,minor,subminor) \
++ ((DEAL_II_BOOST_VERSION_MAJOR * 100000 + \
++    DEAL_II_BOOST_VERSION_MINOR * 100 + \
++     DEAL_II_BOOST_VERSION_SUBMINOR) \
++    >= \
++    (major)*100000 + (minor)*100 + (subminor))
+ 
+ /*
+  * Gmsh:
+@@ -449,4 +461,21 @@ DEAL_II_ENABLE_EXTRA_DIAGNOSTICS
+ #include <deal.II/base/numbers.h>
+ #include <deal.II/base/types.h>
+ 
++/*
++ * Include the boost version header to do a quick version check in case, by
++ * accident, we have configured with one version of boost but are compiling
++ * either the library or an external application with a different version of
++ * boost.
++ */
++#include <boost/version.hpp>
++static_assert(
++  BOOST_VERSION == 100000 * DEAL_II_BOOST_VERSION_MAJOR +
++                     100 * DEAL_II_BOOST_VERSION_MINOR +
++                     DEAL_II_BOOST_VERSION_SUBMINOR,
++  "The version number of boost that you are compiling with does not match the "
++  "version number of boost found during deal.II's configuration step. This "
++  "leads to difficult to understand bugs and is not supported. Please check "
++  "that you have set up your application with the same version of boost as "
++  "deal.II.");
++
+ #endif
+diff --git a/tests/quick_tests/scalapack.cc b/tests/quick_tests/scalapack.cc
+index 60d2eb1e58..5564c2590f 100644
+--- a/tests/quick_tests/scalapack.cc
++++ b/tests/quick_tests/scalapack.cc
+@@ -119,6 +119,8 @@ main(int argc, char **argv)
+ {
+   Utilities::MPI::MPI_InitFinalize mpi_initialization(
+     argc, argv, numbers::invalid_unsigned_int);
++fedisableexcept(FE_INVALID);
++
+ 
+   test<double>(320, 64);
+ }
+

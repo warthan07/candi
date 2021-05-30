@@ -1,0 +1,1 @@
+./candi.sh -j8 -y --platform=deal.II-toolchain/platforms/supported/arch.platform --prefix=~/.deal-ii-candi

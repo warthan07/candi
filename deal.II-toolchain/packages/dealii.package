@@ -20,6 +20,7 @@ CONFOPTS=" \
 -D DEAL_II_WITH_MPI:BOOL=ON \
 -D DEAL_II_WITH_THREADS:BOOL=ON \
 -D DEAL_II_FORCE_BUNDLED_THREADS:BOOL=OFF \
+-D DEAL_II_ALLOW_BUNDLED=OFF \
 -D DEAL_II_COMPONENT_DOCUMENTATION:BOOL=OFF \
 -D DEAL_II_WITH_LAPACK:BOOL=ON \
 -D DEAL_II_WITH_UMFPACK:BOOL=ON \
@@ -214,6 +215,13 @@ fi
 
 ################################################################################
 
+package_specific_patch () {
+	if [ $(basename ${PLATFORM}) = "arch.platform" ]; then
+       cd ${UNPACK_PATH}/${EXTRACTSTO}
+       cecho ${WARN} "applying patch for compatibility with archlinux"
+       git apply ${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_arch_fix.patch
+	fi
+}
 package_specific_conf() {
     ############################################################################
     # Generate modulefile

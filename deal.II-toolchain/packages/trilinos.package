@@ -16,14 +16,14 @@ if [ ${TRILINOS_MAJOR_VERSION} = "DEV" ];then
     PACKING=git
     SOURCE=https://github.com/trilinos/
 elif [ ${TRILINOS_MAJOR_VERSION} = "12" ]; then
-    VERSION=12-18-1
-    CHECKSUM=9c1d151169949bca6cf203831e4d6aee
+    #VERSION=12-18-1
+    #CHECKSUM=9c1d151169949bca6cf203831e4d6aee
 
     #VERSION=12-14-1
     #CHECKSUM=de912cca43c2ca3b74aa08528ac39dbd
 
-    #VERSION=12-12-1
-    #CHECKSUM=ecd4606fa332212433c98bf950a69cc7
+    VERSION=12-12-1
+    CHECKSUM=ecd4606fa332212433c98bf950a69cc7
 
 
     # note: the official trilinos tarball changed md5sum but we confirmed that the contents is
@@ -142,9 +142,9 @@ if [ ! -z "${FC}" ]; then
 fi
 
 CONFOPTS="${CONFOPTS} \
-          -D CMAKE_CXX_FLAGS:STRING=-fPIC -g -O3 \
-          -D CMAKE_C_FLAGS:STRING=-fPIC -g -O3 \
-          -D CMAKE_FORTRAN_FLAGS:STRING=-g -O5 \
+          -D CMAKE_CXX_FLAGS:STRING='-fPIC -g -O3' \
+          -D CMAKE_C_FLAGS:STRING='-fPIC -g -O3' \
+          -D CMAKE_FORTRAN_FLAGS:STRING='-g -O5' \
           -D Trilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran"
 
 # Add ParMETIS, if present
@@ -195,7 +195,7 @@ CONFOPTS="-D TPL_ENABLE_MPI:BOOL=ON \
           -D   Tpetra_INST_FLOAT=ON \
           -D   Tpetra_INST_SERIAL=ON \
           -D Trilinos_ENABLE_AztecOO=ON                     \
-          -D Trilinos_ENABLE_Sacado=ON                      \
+          -D Trilinos_ENABLE_Sacado=OFF                      \
           -D Trilinos_ENABLE_Teuchos=ON                     \
           -D   Teuchos_ENABLE_COMPLEX:BOOL=ON \
           -D   Teuchos_ENABLE_FLOAT:BOOL=ON \
