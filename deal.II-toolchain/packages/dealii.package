@@ -217,9 +217,11 @@ fi
 
 package_specific_patch () {
 	if [ $(basename ${PLATFORM}) = "arch.platform" ]; then
-       cd ${UNPACK_PATH}/${EXTRACTSTO}
-       cecho ${WARN} "applying patch for compatibility with archlinux"
-       git apply ${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_arch_fix.patch
+        cd ${UNPACK_PATH}/${EXTRACTSTO}
+	    if [ -f "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_arch_fix.patch" ]; then
+            cecho ${WARN} "applying patch for compatibility with archlinux"
+            git apply "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_arch_fix.patch"
+	    fi
 	fi
 }
 package_specific_conf() {
