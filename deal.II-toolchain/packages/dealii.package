@@ -216,9 +216,10 @@ fi
 ################################################################################
 
 package_specific_patch () {
-	if [ -f "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_mg_fix.patch" ]; then
-        cecho ${WARN} "applying patch for fixing MG bug"
-        git apply "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_mg_fix.patch"
+	if [ -f "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_mg_fix_1.patch" ]; then
+        cecho ${WARN} "applying patches for fixing MG bug"
+        git apply "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_mg_fix_1.patch"
+        git apply "${ORIG_DIR}/${PROJECT}/patches/dealii-${VERSION}_mg_fix_2.patch"
 	fi
 	if [ $(basename ${PLATFORM}) = "arch.platform" ]; then
         cd ${UNPACK_PATH}/${EXTRACTSTO}
